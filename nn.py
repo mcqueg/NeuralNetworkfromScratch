@@ -34,15 +34,8 @@ def initialize_params(layer_dims):
         return params
 
 
-dims = np.array([3, 5, 6, 1])
-params = initialize_params(dims)
-print(params)
 
 
-
-# Activation Functions
-# define the activation functions that could be used in forward prop
-# define the derivatives of the functions for back prop
 
 # Forward Prop
 # linear_forward step for one layer
