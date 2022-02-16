@@ -34,11 +34,28 @@ def initialize_params(layer_dims):
         return params
 
 
-
-
-
-# Forward Prop
+# Forward prop
 # linear_forward step for one layer
+
+def linear_forward(A, W, b):
+    '''
+    Arguments:
+        A -- activation matrix from the previous layer.
+             size (Al-1, num examples)
+        W -- weights matrix
+            size (Wl, Wl-1)
+        b -- bias vector
+            size (bl, 1)
+
+    Returns:
+        Z -- this will be the input to the activation layer
+        cache -- tuple containing A, W, b..used in back prop
+    '''
+    # matrix multiplication
+    Z = np.dot(W, A) + b
+    # cache of forward prop parameters to use in back prop
+    cache = (A, W, b)
+    
 # activation_forward step for one layer(uses linear_forward)
 # forward_prop for all layers (uses activation forward)
 # stores values from each layer in a cache for backprop
