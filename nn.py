@@ -3,7 +3,7 @@
 
 
 import numpy as np
-import nn_utils
+from nn_utils import *
 
 # Initialize parameters
 def initialize_params(layer_dims):
