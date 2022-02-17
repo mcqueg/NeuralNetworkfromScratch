@@ -3,7 +3,7 @@
 
 
 import numpy as np
-
+import nn_utils
 
 # Initialize parameters
 def initialize_params(layer_dims):
@@ -40,7 +40,7 @@ def initialize_params(layer_dims):
 def linear_forward(A, W, b):
     '''
     Arguments:
-        A -- activation matrix from the previous layer.
+        A -- activation matrix from the previous layer or input.
              size (Al-1, num examples)
         W -- weights matrix
             size (Wl, Wl-1)
@@ -55,10 +55,38 @@ def linear_forward(A, W, b):
     Z = np.dot(W, A) + b
     # cache of forward prop parameters to use in back prop
     cache = (A, W, b)
-    
+
+
 # activation_forward step for one layer(uses linear_forward)
+def linear_activation_forward(A_prev, W, b, activation):
+
+    '''
+    Arguments:
+        A -- activation matrix from the previous layer or input.
+             size (Al-1, num examples)
+        W -- weights matrix
+            size (Wl, Wl-1)
+        b -- bias vector
+            size (bl, 1)
+        activation -- string that specifies which activation method to use
+            options include: "relu" or "sigmoid"
+    Returns:
+    A -- output of the activation funciton
+    cache -- tuple with both "linear_cache" & "activation_cache"
+    '''
+
+    if activation == 'sigmoid':
+        Z, linear_cache = linear_forward(A_prev, W, b)
+        A, activation_cache = sigmoid(Z)
+
+    if activation == 'relu':
+        Z, linear_cache = linear_forward(A_prev, W, b)
+        A, activation_cache = relu(Z)
+
+    return A, cache
+
 # forward_prop for all layers (uses activation forward)
-# stores values from each layer in a cache for backprop
+
 
 # cost function
 # take activation from last layer and true label
