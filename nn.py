@@ -85,8 +85,41 @@ def linear_activation_forward(A_prev, W, b, activation):
 
     return A, cache
 
-# forward_prop for all layers (uses activation forward)
 
+# forward_prop for all layers (uses activation forward)
+def forward_prop(X, params):
+    '''
+    Forward propagation through all layers. using linear_activation_forward()
+     -- Linear -> Relu x L-1 with Linear -> Sigmoid for the last layer
+
+     Arguments:
+        X -- data as a numpy array, sahpe (input size, num examples)
+        parameters -- output from initialize_params()
+
+     Returns:
+        AL -- activation output from the last layer (sigmoid)
+        caches -- list of caches from the forward propogation
+            list of every cache from linear_activation_forward (total num = L)
+    '''
+    caches = []
+    A = X
+    L = len(params) // 2    # gets the number of layers based on the params
+
+    # loop through layers and calculate activation for each
+    # loop starts at 1 b/c 0 is the input layer
+    for l in range(1, L):
+        A_prev = A
+        A, cache = linear_activation_forward(A_prev, params['W' + str(l)],
+                                             params['b' + str(l)], "relu")
+        caches.append(cache)
+
+    # last layer of network (L).. uses sigmoid activation
+    AL, cache = linear_activation_forward(A, params['W' + str(L)],
+                                          params['b' + str(L)], "sigmoid")
+
+    caches.append(cache)
+
+    return AL, cache
 
 # cost function
 # take activation from last layer and true label
