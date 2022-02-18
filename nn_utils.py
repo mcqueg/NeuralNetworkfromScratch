@@ -12,6 +12,6 @@ def sigmoid(Z):
 
 
 def relu(Z):
-    A = Z * (Z>0)
+    A = Z * (Z > 0)
     cache = Z
     return A, cache

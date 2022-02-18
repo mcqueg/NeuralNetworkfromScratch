@@ -5,6 +5,7 @@
 import numpy as np
 from nn_utils import *
 
+
 # Initialize parameters
 def initialize_params(layer_dims):
     '''
