@@ -122,8 +122,28 @@ def forward_prop(X, params):
 
     return AL, cache
 
+
 # cost function
 # take activation from last layer and true label
+def compute_cost(AL, Y):
+    '''
+    computes the categorical cross entropy cost
+
+    Arguments:
+        AL -- activation from the last layer of the network (output of sigmoid)
+            size: (1, number of examples)
+        Y -- vector containing true labels
+            size: (1, number of examples)
+
+        Reurns:
+        cost -- cross entropy cost
+    '''
+
+    m = Y.shape[1]
+    cost = (-1/m) * np.sum(Y*np.log(AL) + (1-Y) * np.log(1-AL))
+    cost = np.squeeze(cost)
+
+    return cost
 
 # Back prop
 # linear_backward step for one layer
