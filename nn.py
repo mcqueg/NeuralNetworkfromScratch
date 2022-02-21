@@ -35,9 +35,12 @@ def initialize_params(layer_dims):
         return params
 
 
-# Forward prop
-# linear_forward step for one layer
+################
+# Forward prop #
+################
 
+
+# linear_forward step for one layer
 def linear_forward(A, W, b):
     '''
     Arguments:
@@ -145,8 +148,37 @@ def compute_cost(AL, Y):
 
     return cost
 
-# Back prop
+
+#############
+# Back prop #
+#############
+
 # linear_backward step for one layer
+def linear_backward(dZ, cache):
+    '''
+    Arguments:
+        dZ -- gradient of cost w/ respect to linear output (current layer (l))
+        cache -- tuple of (A_prev, W, b),from forward prop of current layer (l)
+    Returns:
+        dA_prev -- Gradient of cost w/ respect to activation of previous layer
+        dW -- Gradient of the cost w/ respect to W
+        db -- Gradient of the cost w/ respect to b
+    '''
+
+    A_prev, W, b = cache
+    m = A_prev.shape[1]
+
+    dW = (1/m) * np.dot(dZ, A_prev.T)
+    db = (1/m) * np.sum(dZ, axis=1, keepdims=True)
+    dA_prev = np.dot(W.T, dZ)
+
+    # double check that the shapes match
+    assert (dA_prev.shape == A_prev.shape)
+    assert (dW.shape == W.shape)
+    assert (db.shape == b.shape)
+    
+    return dA_prev, dW, db
+
 # activation_backward for one layer (uses linear_backward)
 # backward_prop for all layers (using activation backward)
 # needs cache from the forward pass
