@@ -176,10 +176,15 @@ def linear_backward(dZ, cache):
     assert (dA_prev.shape == A_prev.shape)
     assert (dW.shape == W.shape)
     assert (db.shape == b.shape)
-    
+
     return dA_prev, dW, db
 
+
 # activation_backward for one layer (uses linear_backward)
+def linear_activation_backward(dA, cache, activation):
+
+    return dA_prev, dW, db
+
 # backward_prop for all layers (using activation backward)
 # needs cache from the forward pass
 

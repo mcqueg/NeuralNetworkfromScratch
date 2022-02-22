@@ -15,3 +15,11 @@ def relu(Z):
     A = Z * (Z > 0)
     cache = Z
     return A, cache
+
+
+def sigmoid_back(dA, activation_cache):
+    return dZ
+
+
+def relu_back(dA, activation_cache):
+    return dZ
