@@ -182,6 +182,27 @@ def linear_backward(dZ, cache):
 
 # activation_backward for one layer (uses linear_backward)
 def linear_activation_backward(dA, cache, activation):
+    '''
+    Arguments:
+        dA -- gradient for layer l (current layer)
+        cache -- tuple storing values for linear_cache and activation_cache
+        activation -- string specifying which activation is to be used
+
+    Returns:
+        dA_prev -- Gradient of cost w/ respect to activation of previous layer
+        dW -- Gradient of the cost w/ respect to W
+        db -- Gradient of the cost w/ respect to b
+    '''
+    # seperates cache from forward prop
+    linear_cache, activation_cache = cache
+
+    if activation == "sigmoid":
+        dZ = sigmoid_back(dA, activation_cache)
+        dA_prev, dW, db = linear_backward(dZ, linear_cache)
+
+    elif activation == "relu":
+        dZ = relu_back(dA, activation_cache)
+        dA_prev, dW, db = linear_backward(dZ, linear_cache)
 
     return dA_prev, dW, db
 
