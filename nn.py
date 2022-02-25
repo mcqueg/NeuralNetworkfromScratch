@@ -206,7 +206,52 @@ def linear_activation_backward(dA, cache, activation):
 
     return dA_prev, dW, db
 
-# backward_prop for all layers (using activation backward)
-# needs cache from the forward pass
 
+# needs caches from the forward pass
+def backward_prop(AL, Y, caches):
+    '''
+    Computes the backwards propagation through L-layers using its helper
+    functions linear_backward() & linear_activation_backward()
+
+    Arguments:
+        AL -- propability vector from the forward propagation
+        Y -- true label vector
+        caches -- list of caches
+            all relu caches are in range(l,L -1)
+            sigmoid cache is L - 1
+
+    Returns:
+        grads -- dictionary with gradients for each param
+            dA = grads["dA" + str(l)]
+            dW = grads["dW" + str(l)]
+            db = grads["db" + str(l)]
+    '''
+    grads = {}
+    L = len(caches)  # number of layers
+    m = AL.shape[1]
+    Y = Y.reshape(AL.shape)
+
+    # backprop initialization, derivative of cost w/ respect to AL
+    dAL = - (np.divide(Y, AL) - np.divide(1-Y, 1-AL))
+
+    current_cache = caches[L-1]  # cache for the sigmoid, last layer
+    dA_prev_temp, dW_temp, db_temp = linear_activation_backward(dAL,
+                                                                current_cache,
+                                                                "sigmoid")
+    grads["dA" + str(L-1)] = dA_prev_temp
+    grads["dW" + str(L)] = dW_temp
+    grads["db" + str(L)] = db_temp
+
+    # loop backward through L-2 to l=0, relu layers
+    for l in reversed(range(L-1)):
+        current_cache = caches[l]
+        dA_prev_temp, dW_temp, db_temp = linear_activation_backward(grads["dA" + str(l+1)],
+                                                                    current_cache,
+                                                                    "relu")
+        # update gradient dictionary
+        grads["dA" + str(l)] = dA_prev_temp
+        grads["dW" + str(l+1)] = dW_temp
+        grads["db" + str(l+1)] = db_temp
+
+    return grads
 # update params using gradient descent
