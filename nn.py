@@ -254,4 +254,28 @@ def backward_prop(AL, Y, caches):
         grads["db" + str(l+1)] = db_temp
 
     return grads
+
+
 # update params using gradient descent
+def update_params(params, grads, learning_rate):
+    '''
+    Update parameters using gradient descent
+
+    Arguments:
+        params -- python dictionary containing the parameters
+        grads -- python dictionary containing grads output of backward_prop
+        learning_rate -- hard coded value to be applied when updating params
+
+    Returns:
+        params -- python dictionary containing the updated parameters
+    '''
+
+    parameters = params.copy()  # copy current params for updating
+    L = len(parameters) // 2  # get the number of layers in the network
+
+    # loop through dict &  update using gradient descent
+    for l in range(L):
+        parameters["W" + str(l+1)] = parameters["W" + str(l+1)] - learning_rate * grads["dW" + str(l+1)]
+        parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - learning_rate * grads["db" + str(l+1)]
+
+    return params
