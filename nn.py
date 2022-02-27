@@ -40,8 +40,8 @@ def initialize_params(layer_dims):
 ################
 
 
-# linear_forward step for one layer
-def linear_forward(A, W, b):
+# Forwar linear step for one layer
+def forward_linear(A, W, b):
     '''
     Arguments:
         A -- activation matrix from the previous layer or input.
@@ -61,8 +61,8 @@ def linear_forward(A, W, b):
     cache = (A, W, b)
 
 
-# activation_forward step for one layer(uses linear_forward)
-def linear_activation_forward(A_prev, W, b, activation):
+# forward activation step for one layer(uses linear_forward)
+def forward_activation(A_prev, W, b, activation):
 
     '''
     Arguments:
@@ -80,20 +80,20 @@ def linear_activation_forward(A_prev, W, b, activation):
     '''
 
     if activation == 'sigmoid':
-        Z, linear_cache = linear_forward(A_prev, W, b)
+        Z, linear_cache = forward_linear(A_prev, W, b)
         A, activation_cache = sigmoid(Z)
 
     if activation == 'relu':
-        Z, linear_cache = linear_forward(A_prev, W, b)
+        Z, linear_cache = forward_linear(A_prev, W, b)
         A, activation_cache = relu(Z)
 
     return A, cache
 
 
-# forward_prop for all layers (uses activation forward)
+# forward_prop for all layers (uses forward_activation)
 def forward_prop(X, params):
     '''
-    Forward propagation through all layers. using linear_activation_forward()
+    Forward propagation through all layers. using activation_forward()
      -- Linear -> Relu x L-1 with Linear -> Sigmoid for the last layer
 
      Arguments:
@@ -103,7 +103,7 @@ def forward_prop(X, params):
      Returns:
         AL -- activation output from the last layer (sigmoid)
         caches -- list of caches from the forward propogation
-            list of every cache from linear_activation_forward (total num = L)
+            list of every cache from forward activation (total num = L)
     '''
     caches = []
     A = X
@@ -113,13 +113,13 @@ def forward_prop(X, params):
     # loop starts at 1 b/c 0 is the input layer
     for l in range(1, L):
         A_prev = A
-        A, cache = linear_activation_forward(A_prev, params['W' + str(l)],
-                                             params['b' + str(l)], "relu")
+        A, cache = forward_activation(A_prev, params['W' + str(l)],
+                                      params['b' + str(l)], "relu")
         caches.append(cache)
 
     # last layer of network (L).. uses sigmoid activation
-    AL, cache = linear_activation_forward(A, params['W' + str(L)],
-                                          params['b' + str(L)], "sigmoid")
+    AL, cache = forward_activation(A, params['W' + str(L)],
+                                   params['b' + str(L)], "sigmoid")
 
     caches.append(cache)
 
@@ -153,8 +153,8 @@ def compute_cost(AL, Y):
 # Back prop #
 #############
 
-# linear_backward step for one layer
-def linear_backward(dZ, cache):
+# backward_linear step for one layer
+def backward_linear(dZ, cache):
     '''
     Arguments:
         dZ -- gradient of cost w/ respect to linear output (current layer (l))
@@ -180,8 +180,8 @@ def linear_backward(dZ, cache):
     return dA_prev, dW, db
 
 
-# activation_backward for one layer (uses linear_backward)
-def linear_activation_backward(dA, cache, activation):
+# activation in backprop for one layer (uses backward_linear)
+def backward_activation(dA, cache, activation):
     '''
     Arguments:
         dA -- gradient for layer l (current layer)
@@ -198,11 +198,11 @@ def linear_activation_backward(dA, cache, activation):
 
     if activation == "sigmoid":
         dZ = sigmoid_back(dA, activation_cache)
-        dA_prev, dW, db = linear_backward(dZ, linear_cache)
+        dA_prev, dW, db = backward_linear(dZ, linear_cache)
 
     elif activation == "relu":
         dZ = relu_back(dA, activation_cache)
-        dA_prev, dW, db = linear_backward(dZ, linear_cache)
+        dA_prev, dW, db = backward_linear(dZ, linear_cache)
 
     return dA_prev, dW, db
 
@@ -211,7 +211,7 @@ def linear_activation_backward(dA, cache, activation):
 def backward_prop(AL, Y, caches):
     '''
     Computes the backwards propagation through L-layers using its helper
-    functions linear_backward() & linear_activation_backward()
+    functions backward_linear() & backward_activation()
 
     Arguments:
         AL -- propability vector from the forward propagation
@@ -229,15 +229,14 @@ def backward_prop(AL, Y, caches):
     grads = {}
     L = len(caches)  # number of layers
     m = AL.shape[1]
-    Y = Y.reshape(AL.shape)
+    Y = Y.reshape(AL.shape)  # make the AL and Y the same shape
 
     # backprop initialization, derivative of cost w/ respect to AL
     dAL = - (np.divide(Y, AL) - np.divide(1-Y, 1-AL))
 
     current_cache = caches[L-1]  # cache for the sigmoid, last layer
-    dA_prev_temp, dW_temp, db_temp = linear_activation_backward(dAL,
-                                                                current_cache,
-                                                                "sigmoid")
+    dA_prev_temp, dW_temp, db_temp = backward_activation(dAL, current_cache,
+                                                         "sigmoid")
     grads["dA" + str(L-1)] = dA_prev_temp
     grads["dW" + str(L)] = dW_temp
     grads["db" + str(L)] = db_temp
@@ -245,9 +244,9 @@ def backward_prop(AL, Y, caches):
     # loop backward through L-2 to l=0, relu layers
     for l in reversed(range(L-1)):
         current_cache = caches[l]
-        dA_prev_temp, dW_temp, db_temp = linear_activation_backward(grads["dA" + str(l+1)],
-                                                                    current_cache,
-                                                                    "relu")
+        dA_prev_temp, dW_temp, db_temp = backward_activation(grads["dA" + str(l+1)],
+                                                             current_cache,
+                                                             "relu")
         # update gradient dictionary
         grads["dA" + str(l)] = dA_prev_temp
         grads["dW" + str(l+1)] = dW_temp
