@@ -126,7 +126,10 @@ def forward_prop(X, params):
     return AL, cache
 
 
-# cost function
+#################
+# cost function #
+#################
+
 # take activation from last layer and true label
 def compute_cost(AL, Y):
     '''
@@ -278,3 +281,58 @@ def update_params(params, grads, learning_rate):
         parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - learning_rate * grads["db" + str(l+1)]
 
     return params
+
+
+#########
+# Model #
+#########
+
+def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, print_cost):
+    '''
+    Implements a deep neural network model of size L-layers
+
+    Arguments:
+        X -- array of input data
+            shape:(num_px * num_px * 3, number of examples)
+        Y -- true label vector, true classification of input data
+            size : numnber of examples
+        layer_dims -- list containing input size & layer sizes
+                w/ length of (layers + 1)
+        learning_rate -- alpha value update_params during gradient descent
+        num_iterations -- num iterations for optimization loop
+        print_cost -- Boolean, if true prints the cost every 100 steps
+
+    Returns
+        params -- dictionary of trained weights that can be used to predict
+        costs -- list containing costs from model training
+    '''
+    np.random.seed(1)   # for replication purposes
+    costs = []  # keep track of costs for every iteration
+
+    # Initialze the parameters
+    params = initialize_params(layers_dims)
+
+    # Gradient descent: Loop through layers for num_interations
+    for i in range(0, num_iterations):
+
+        # forward pass through netwwork, predict
+        AL, caches = forward_prop(X, params)
+
+        # compute cost from out of forward pass and true labels
+        cost = compute_cost(AL, Y)
+
+        # backward pass through netwwork, compute gradients
+        grads = backward_prop(AL, Y, caches)
+
+        # update params for gradient descent
+        params = update_params(params, grads, learning_rate)
+
+        # print cost while model runs every 100 passses and the last pass
+        if print_cost and i % 100 == 0 or i == num_iterations - 1:
+            print("Cost afer iteration {}: {}". format(i, np.squeeze(cost)))
+
+        # save the cost every 100 passes and the last pass
+        if i % 100 == 0 or i == num_iterations:
+            costs.append(cost)
+
+    return params, costs
