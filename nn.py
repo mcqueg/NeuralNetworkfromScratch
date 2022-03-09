@@ -1,8 +1,9 @@
 
-# implenmentation of a neural network using pure numpy
+# neural network methods using pure numpy
 
 
 import numpy as np
+
 
 # Initialize parameters
 def initialize_params(layer_dims):
@@ -23,164 +24,14 @@ def initialize_params(layer_dims):
 
     for l in range(1, L):  # start at 1 to avoide index/layer num confusion
 
-        params['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1])*0.01
+        params['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1]) * 0.01
         params['b' + str(l)] = np.zeros((layer_dims[l], 1))
 
         # check to makes ure the shapes match
-        assert(params['W' + str(l)].shape == (layer_dims[l], layer_dims[l - 1]))
+        assert(params['W'+str(l)].shape == (layer_dims[l], layer_dims[l - 1]))
         assert(params['b' + str(l)].shape == (layer_dims[l], 1))
 
         return params
-
-###############
-# activations #
-###############
-
-
-def sigmoid(Z):
-    '''
-    Arguments:
-        Z -- output from forward linear, dot prod of W and b:
-
-    Returns:
-        A -- post activation vector, input to next layer forward linear
-        cache -- stores Z for current l in sigmoid_back
-    '''
-    A = 1 / (1 + np.exp(-Z))
-    cache = Z
-
-    assert(A.shape == Z.shape)
-
-    return A, cache
-
-
-def sigmoid_back(dA, cache):
-    '''
-    Arguments:
-        dA -- post-activation gradient
-        cache -- Z value from forward activation
-
-    Returns:
-        dZ -- gradient of cost with respect to Z
-    '''
-    Z = cache
-
-    x = 1/(1+np.exp(-Z))
-    dZ = dA * x * (1-x)
-
-    assert (dZ.shape == Z.shape)
-
-    return dZ
-
-
-def relu(Z):
-    '''
-    Arguments:
-        Z -- output from forward linear, dot prod of W and b:
-
-    Returns:
-        A -- post activation vector, input to next layer forward linear
-        cache -- stores Z for current l in relu_back
-    '''
-    A = np.maximum(0, Z)
-    cache = Z
-
-    assert(A.shape == Z.shape)
-
-    return A, cache
-
-
-def relu_back(dA, cache):
-    '''
-    Arguments:
-        dA -- post-activation gradient
-        cache -- stores 'Z' value from forward activation
-
-    Returns:
-        dZ -- gradient of cost with respect to Z
-    '''
-    Z = cache
-
-    dZ = np.array(dA, copy=True)  # converting dz to a correct object.
-
-    # When z <= 0, dz is set to 0 as well.
-    dZ[Z <= 0] = 0
-    assert (dZ.shape == Z.shape)
-
-    return dZ
-
-
-def leaky_relu(Z):
-    '''
-    Arguments:
-        Z -- output from forward linear, dot prod of W and b:
-
-    Returns:
-        A -- post activation vector, input to next layer forward linear
-        cache -- stores Z for current l in leaky_relu_back
-    '''
-
-    A = np.maximum(0.01 * Z, Z)
-    cache = Z
-
-    assert (A.shape == Z.shape)
-
-    return A, cache
-
-
-def leaky_relu_back(dA, cache):
-    '''
-    Arguments:
-        dA -- post-activation gradient
-        cache -- stores 'Z' value from forward activation
-
-    Returns:
-        dZ -- gradient of cost with respect to Z
-    '''
-
-    Z = cache
-
-    dZ = np.array(dA, copy=True)  # converting dz to a correct object.
-
-    # When z <= 0 dz = 0.01
-    dZ[Z <= 0] = 0.01
-
-    return dZ
-
-
-def tanh(Z):
-    '''
-    Arguments:
-        Z -- output from forward linear, dot prod of W and b:
-
-    Returns:
-        A -- post activation vector, input to next layer forward_linear
-        cache -- stores Z for current l in tanh_back
-    '''
-    A = tanh(Z)
-    cache = Z
-
-    assert (A.shape == Z.shape)
-
-    return A, cache
-
-
-def tanh_back(dA, cache):
-    '''
-    Arguments:
-        dA -- post-activation gradient
-        cache -- stores 'Z' value from forward_activation
-
-    Returns:
-        dZ -- gradient of cost with respect to Z
-    '''
-    Z = cache
-
-    dZ = dA * (1 - np.tanh(Z)**2)
-
-    assert (dZ.shape == Z.shape)
-
-    return dZ
 
 
 ################
@@ -208,10 +59,11 @@ def forward_linear(A, W, b):
     # cache of forward prop parameters to use in back prop
     cache = (A, W, b)
 
+    return Z, cache
+
 
 # forward activation step for one layer(uses linear_forward)
 def forward_activation(A_prev, W, b, activation):
-
     '''
     Arguments:
         A -- activation matrix from the previous layer or input.
@@ -235,6 +87,7 @@ def forward_activation(A_prev, W, b, activation):
         Z, linear_cache = forward_linear(A_prev, W, b)
         A, activation_cache = relu(Z)
 
+    cache = (linear_cache, activation_cache)
     return A, cache
 
 
@@ -348,11 +201,11 @@ def backward_activation(dA, cache, activation):
     linear_cache, activation_cache = cache
 
     if activation == "sigmoid":
-        dZ = sigmoid_back(dA, activation_cache)
+        dZ = sigmoid_derivative(dA, activation_cache)
         dA_prev, dW, db = backward_linear(dZ, linear_cache)
 
     elif activation == "relu":
-        dZ = relu_back(dA, activation_cache)
+        dZ = relu_derivative(dA, activation_cache)
         dA_prev, dW, db = backward_linear(dZ, linear_cache)
 
     return dA_prev, dW, db
@@ -395,9 +248,9 @@ def backward_prop(AL, Y, caches):
     # loop backward through L-2 to l=0, relu layers
     for l in reversed(range(L-1)):
         current_cache = caches[l]
-        dA_prev_temp, dW_temp, db_temp = backward_activation(grads["dA" + str(l+1)],
-                                                             current_cache,
-                                                             "relu")
+        dA_prev_temp, dW_temp, db_temp = backward_activation(
+            grads["dA" + str(l + 1)],
+            current_cache, "relu")
         # update gradient dictionary
         grads["dA" + str(l)] = dA_prev_temp
         grads["dW" + str(l+1)] = dW_temp
@@ -425,8 +278,10 @@ def update_params(params, grads, learning_rate):
 
     # loop through dict &  update using gradient descent
     for l in range(L):
-        parameters["W" + str(l+1)] = parameters["W" + str(l+1)] - learning_rate * grads["dW" + str(l+1)]
-        parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - learning_rate * grads["db" + str(l+1)]
+        parameters["W" + str(l+1)] = parameters["W" + str(l+1)] - \
+            learning_rate * grads["dW" + str(l+1)]
+        parameters["b" + str(l+1)] = parameters["b" + str(l+1)] - \
+            learning_rate * grads["db" + str(l+1)]
 
     return params
 
