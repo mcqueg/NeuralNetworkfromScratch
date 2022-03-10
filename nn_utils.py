@@ -95,8 +95,8 @@ def he_params(layer_dims):
     L = len(layers_dims)            # number of layers in the network
     for l in range(1, L):
         # initialize weights randomly w/ normal distribution apply he weighting
-        parameters['W%s' % l)] = np.random.randn((layers_dims[l],layers_dims[l-1])) * np.sqrt(2./layers_dims[l-1])
-        #initialize biases as 0
+        parameters['W%s' % l] = np.random.randn((layers_dims[l], layers_dims[l-1])) * np.sqrt(2./layers_dims[l-1])
+        # initialize biases as 0
         parameters['b%s' % l] = np.zeros((layers_dims[l], 1))
 
         return parameters
@@ -104,6 +104,7 @@ def he_params(layer_dims):
 ##################
 # Model accuracy #
 ##################
+
 
 def model_accuracy(y_hat, y_true):
     pred_labels = np.argmax(y_hat, axis=0, keepdims=True)
