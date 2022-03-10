@@ -244,6 +244,7 @@ class NumpyNet():
             plt.xlabel('epochs (per 100)')
             plt.title("Learning rate = " + str(self.learning_rate))
             plt.show()
+            print(model_accuracy(self.cache['A%s' % self.num_layers], Y))
 
     # forward pass through network for implementing after model is trained
     def predict(self, X, Y):
