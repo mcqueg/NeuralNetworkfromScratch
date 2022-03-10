@@ -1,6 +1,7 @@
 # OOP implenmentation of a neural network using pure numpy
 
 import numpy as np
+import matplotlib.pyplot as plt
 from nn_utils import *
 
 # pass a list of layer diminesions
@@ -27,7 +28,7 @@ class NumpyNet():
     # grads --> dict for gradients during backpropagation
 
     def __init__(self, layers_dims, activations, learning_rate,
-                 num_iterations, mini_batch):
+                 num_iterations, initializer, mini_batch):
 
         if len(layers_dims) != len(activations):
             print("There is a network mismatch...")
@@ -39,6 +40,7 @@ class NumpyNet():
         self.activations = activations
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
+        self.initializer = initializer
         self.mini_batch = mini_batch
         self.num_layers = len(self.layers_dims) - 1
         self.params = dict()
@@ -47,6 +49,19 @@ class NumpyNet():
 
     # Initialize parameters
     def initialize_params(self):
+        if self.initializer == 'zeros':
+            self.params = zero_params(self.layers_dims)
+        elif self.initializer == 'random':
+            self.params = random_params_params(self.layers_dims)
+        elif self.initializer == 'he':
+            self.params = he_params(self.layers_dims)
+
+        # checking to make sure the dimensions of params matches input shape
+        assert(self.params['W%s' % l].shape == (self.layers_dims[l],
+                                                self.layers_dims[l-1]))
+        assert(self.params['b%s' % l].shape == (self.layers_dims[l], 1))
+
+        '''
         # start at 1 to avoide index/layer num confusion
         for l in range(1, self.num_layers + 1):
             # initializes the weights randomly
@@ -60,7 +75,7 @@ class NumpyNet():
             assert(self.params['W%s' % l].shape == (self.layers_dims[l],
                                                     self.layers_dims[l-1]))
             assert(self.params['b%s' % l].shape == (self.layers_dims[l], 1))
-
+            '''
     # forward propagation through one layer.
     # linear forward step: Z[l] = np.dot(weights[l], activation[l-1] + bias[l]
     # activation forward step: A[l] = activation(Z[l])
@@ -156,26 +171,83 @@ class NumpyNet():
             dA_prev = np.dot(W.T, dZ)
         else:
             Z = self.cache['Z%s' % str(self.num_layers)]
-            dAL = -
-        pass
+            dAL = - (np.divide(Y, AL) - np.divide(1-Y, 1-AL))
+            dA_prev, dW, db = self.layer_backward(self, dAL, A_prev, Z, W,
+                                                  self.activations[-1])
+        # update grads dict with the gradients
+        self.grads['dW%s' % str(self.num_layers)] = dW
+        self.grads['db%s' % str(self.num_layers)] = db
+        self.grads['dA%s' % str(self.num_layers - 1)] = dA_prev
+
+        # loop through the rest of the layers with layer_backward
+        for l in reversed(range(self.num_layers - 1)):
+            # gather current layer info
+            dA = self.grads['dA%s' % str(l)]
+            A_prev = self.cache['A%s' % str(l-1)]
+            Z = self.cache['Z%s' % str(l)]
+            W = self.params['W%s' % str(l)]
+            activation = self.activations[l]
+            # backward pass through layer
+            dA_prev, dW, db = self.layer_backward(self, dA, A_prev, Z, W,
+                                                  activation)
+            # update grads dict with computed gradients
+            self.grads['dA%s' % str(l - 1)] = dA_prev
+            self.grads['dW%s' % str(l)] = dW
+            self.grads['db%s' % str(l)] = db
 
     # update params using gradient descent
     # based on the gradients generated in nn_backward() & layer_backward()
     # uses learning rate and gradients to perfrom gradient descent
     def update_params(self):
-        pass
+        for l in range(1, self.num_layers + 1):
+            # update weights using gradient descent
+            self.params['W%s' % l] = self.params['W%s' % l] - self.learning_rate * self.grads['dW%s']
+            # update bias using gradient descent
+            self.params['b%s' % l] = self.params['b%s' % l] - self.learning_rate * self.grads['db%s']
 
     # executes one full pass through network updating params and returning cost
     # nn_forward() --> compute_cost() --> nn_backward() --> update_params()
     def network_pass(self, X_batch, Y_batch):
+        # forward propagation
+        self.nn_forward(X_batch)
+        # cost of forward prop is saved to return
+        cost = self.compute_cost(Y_batch)
+        # back propagation
+        self.nn_backward(Y_batch)
+        # update the parameters via gradient descent using params/grads
+        self.update_params()
+
         return cost
 
     # training the neural network
     # iterates using network_pass() for self.num_iterations
     # plots cost if set to True
     def train(self, X, Y, print_cost=True):
-        pass
+        # initialize parameters (weights randomly, biases -> 0)
+        self.initialize_params()
+        # create costs list to store the cost for every epoch
+        # used to evaluate training
+        costs = []
+        num_samples = Y.shape[1]
+        # iterate training based on num specified when building model
+        for i in range(0, self.num_iterations):
+            for index in range(0, num_samples, self.mini_batch):
+                end = index + self.mini_batch
+                cost = self.network_pass(X[:, index:end], Y[:, index:end])
+                if print_cost and i % 100 == 0:
+                    print("Cost after epoch %i: %f" % (i, cost))
+                    costs.append(cost)
+        if print_cost:
+            # plot the cost
+            plt.plot(costs)
+            plt.ylabel('cost')
+            plt.xlabel('epochs (per 100)')
+            plt.title("Learning rate = " + str(self.learning_rate))
+            plt.show()
 
     # forward pass through network for implementing after model is trained
-    def run(self, X, Y):
+    def predict(self, X, Y):
+        self.nn_forward(X)
+        accuracy = model_accuracy(self.cache['A%s' % self.num_layers], Y)
+
         return accuracy

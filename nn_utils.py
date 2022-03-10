@@ -1,3 +1,4 @@
+
 import numpy as np
 
 ###############
@@ -57,3 +58,54 @@ def softmax_derivative(Z):
     dA = A * (1 - Z_sum)
     assert(dA.shape == Z.shape)
     return dA
+
+
+################
+# initializers #
+################
+# pass array containing the size of each layer into each initializer
+
+# zero initialization of all params
+def zero_params(layer_dims):
+    parameters = {}
+    L = len(layers_dims)            # number of layers in the network
+    for l in range(1, L):
+        parameters['W%s' % l] = np.zeros((layers_dims[l], layers_dims[l-1]))
+        parameters['b%s' % l] = np.zeros((layers_dims[l], 1))
+
+    return parameters
+
+
+# random initialization of the weight params w/ normal distribution
+def random_params(layer_dims):
+    parameters = {}
+    L = len(layers_dims)            # number of layers in the network
+    for l in range(1, L):
+        # initialize weights randomly with a normal distribution
+        parameters['W%s' % l] = np.random.randn((layers_dims[l], layers_dims[l-1])) * 0.1
+        # initialize biases as 0
+        parameters['b%s' % l] = np.zeros((layers_dims[l], 1))
+
+        return parameters
+
+
+# he initialization of the weight params
+def he_params(layer_dims):
+    parameters = {}
+    L = len(layers_dims)            # number of layers in the network
+    for l in range(1, L):
+        # initialize weights randomly w/ normal distribution apply he weighting
+        parameters['W%s' % l)] = np.random.randn((layers_dims[l],layers_dims[l-1])) * np.sqrt(2./layers_dims[l-1])
+        #initialize biases as 0
+        parameters['b%s' % l] = np.zeros((layers_dims[l], 1))
+
+        return parameters
+
+##################
+# Model accuracy #
+##################
+
+def model_accuracy(y_hat, y_true):
+    pred_labels = np.argmax(y_hat, axis=0, keepdims=True)
+    frac_correct = np.mean(pred_labels == true_labels) * 100
+    return frac_correct
