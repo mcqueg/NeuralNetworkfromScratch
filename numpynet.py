@@ -28,7 +28,7 @@ class NumpyNet():
     # grads --> dict for gradients during backpropagation
 
     def __init__(self, layers_dims, activations, learning_rate,
-                 num_iterations, initializer, mini_batch):
+                 num_iterations):
 
         if len(layers_dims) != len(activations):
             print("There is a network mismatch...")
@@ -40,15 +40,18 @@ class NumpyNet():
         self.activations = activations
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
-        self.initializer = initializer
-        self.mini_batch = mini_batch
+        # self.initializer = initializer
+        # self.mini_batch = mini_batch
         self.num_layers = len(self.layers_dims) - 1
-        self.params = dict()
-        self.grads = dict()
-        self.cache = dict()
+        self.params, self.cache, self.grads = self.initialize_params()
 
     # Initialize parameters
+
     def initialize_params(self):
+        params = {}
+        cache = {}
+        grads = {}
+        '''
         if self.initializer == 'zeros':
             self.params = zero_params(self.layers_dims)
         elif self.initializer == 'random':
@@ -62,20 +65,30 @@ class NumpyNet():
         assert(self.params['b%s' % l].shape == (self.layers_dims[l], 1))
 
         '''
+
         # start at 1 to avoide index/layer num confusion
-        for l in range(1, self.num_layers + 1):
-            # initializes the weights randomly
-            self.params['W%s' % l] == np.random.randn(
-                self.layers_dims[l],
-                self.layers_dims[l-1]) * 0.01
+        for l in range(1, len(self.layers_dims)):
+            # initializes the weights with he initialization
+            if self.activations[l-1] == 'relu':
+                params['W%s' % l] = np.random.randn(
+                    self.layers_dims[l],
+                    self.layers_dims[l-1]) * np.sqrt(2./self.layers_dims[l-1])
+
+            else:
+                params['W%s' % l] = np.random.randn(
+                    self.layers_dims[l],
+                    self.layers_dims[l-1]) * 0.01
+
             # initializes the biases as zero
-            self.params['b%s' % l] == np.zeros((self.layers_dims[l],  1))
+            params['b%s' % l] = np.zeros((self.layers_dims[l],  1))
 
             # checking to make sure the dimensions of params matches the
-            assert(self.params['W%s' % l].shape == (self.layers_dims[l],
-                                                    self.layers_dims[l-1]))
-            assert(self.params['b%s' % l].shape == (self.layers_dims[l], 1))
-            '''
+            assert(params['W%s' % l].shape == (self.layers_dims[l],
+                                               self.layers_dims[l-1]))
+            assert(params['b%s' % l].shape == (self.layers_dims[l], 1))
+
+        return params, cache, grads
+
     # forward propagation through one layer.
     # linear forward step: Z[l] = np.dot(weights[l], activation[l-1] + bias[l]
     # activation forward step: A[l] = activation(Z[l])
@@ -102,7 +115,7 @@ class NumpyNet():
         # handles input as "A_prev"
         self.cache['A0'] = X
         # loop through layers geting current layers weights bias and activation
-        for l in range(1, self.num_iterations + 1):
+        for l in range(1, len(self.layers_dims)):
             W = self.params['W%s' % l]
             b = self.params['b%s' % l]
             activation = self.activations[l]
@@ -110,8 +123,7 @@ class NumpyNet():
             # adds A[l] to cache to use for the next layer input
             # adds Z[l] to cache to use in back propagation
             self.cache['A%s' % l], self.cache['Z%s' % l] = self.layer_forward(
-                self.cache['A%s' % (l-1)],
-                W, b, activation)
+                                                        self.cache['A%s' % (l-1)], W, b, activation)
 
     # cost function
     # find the cost from the forward prop predicitons and true labels
@@ -125,8 +137,9 @@ class NumpyNet():
             loss = -(np.multiply(Y, np.log(AL)) + np.multiply(
                 (1-Y), np.log(1-AL)))
         # Cross entropy loss
+        # TODO: fix loss for softmax, arrays will not broadcast
         elif self.activations[self.num_layers] == 'softmax':
-            loss = -np.sum(np.multiply(Y, np.log(AL)), axis=0, keepdims=True)
+            loss = -np.sum(np.multiply(Y, np.log(AL)), axis=1, keepdims=True)
         else:
             print('Output layer activation not valid....')
             print('Activation must be: \'sigmoid\' or \'softmax\'')
@@ -207,13 +220,13 @@ class NumpyNet():
 
     # executes one full pass through network updating params and returning cost
     # nn_forward() --> compute_cost() --> nn_backward() --> update_params()
-    def network_pass(self, X_batch, Y_batch):
+    def network_pass(self, X, Y):
         # forward propagation
-        self.nn_forward(X_batch)
+        self.nn_forward(X)
         # cost of forward prop is saved to return
-        cost = self.compute_cost(Y_batch)
+        cost = self.compute_cost(Y)
         # back propagation
-        self.nn_backward(Y_batch)
+        self.nn_backward(Y)
         # update the parameters via gradient descent using params/grads
         self.update_params()
 
@@ -223,17 +236,15 @@ class NumpyNet():
     # iterates using network_pass() for self.num_iterations
     # plots cost if set to True
     def train(self, X, Y, print_cost=True):
-        # initialize parameters (weights randomly, biases -> 0)
-        self.initialize_params()
+
         # create costs list to store the cost for every epoch
         # used to evaluate training
         costs = []
-        num_samples = Y.shape[1]
+        num_samples = Y.shape[0]
         # iterate training based on num specified when building model
         for i in range(0, self.num_iterations):
-            for index in range(0, num_samples, self.mini_batch):
-                end = index + self.mini_batch
-                cost = self.network_pass(X[:, index:end], Y[:, index:end])
+            for l in range(0, num_samples-1):
+                cost = self.network_pass(X[l], Y[l])
                 if print_cost and i % 100 == 0:
                     print("Cost after epoch %i: %f" % (i, cost))
                     costs.append(cost)
