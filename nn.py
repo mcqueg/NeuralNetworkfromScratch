@@ -4,6 +4,8 @@
 
 import numpy as np
 
+from nn_utils import *
+
 
 # Initialize parameters
 def initialize_params(layer_dims):
@@ -24,7 +26,7 @@ def initialize_params(layer_dims):
 
     for l in range(1, L):  # start at 1 to avoide index/layer num confusion
 
-        params['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1]) * 0.01
+        params['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1]) * np.sqrt(2./layer_dims[l-1])
         params['b' + str(l)] = np.zeros((layer_dims[l], 1))
 
         # check to makes ure the shapes match
@@ -83,13 +85,16 @@ def forward_activation(A_prev, W, b, activation):
         Z, linear_cache = forward_linear(A_prev, W, b)
         A, activation_cache = sigmoid(Z)
 
-    if activation == 'relu':
+    elif activation == 'relu':
         Z, linear_cache = forward_linear(A_prev, W, b)
         A, activation_cache = relu(Z)
 
+    elif activation == 'softmax':
+        Z, linear_cache = forward_linear(A_prev, W, b)
+        A, activation_cache = softmax(Z)
+
     cache = (linear_cache, activation_cache)
     return A, cache
-
 
 # forward_prop for all layers (uses forward_activation)
 def forward_prop(X, params):
@@ -118,9 +123,9 @@ def forward_prop(X, params):
                                       params['b' + str(l)], "relu")
         caches.append(cache)
 
-    # last layer of network (L).. uses sigmoid activation
+    # last layer of network (L).. uses activation
     AL, cache = forward_activation(A, params['W' + str(L)],
-                                   params['b' + str(L)], "sigmoid")
+                                   params['b' + str(L)], "softmax")
 
     caches.append(cache)
 
@@ -137,7 +142,7 @@ def compute_cost(AL, Y):
     computes the categorical cross entropy cost
 
     Arguments:
-        AL -- activation from the last layer of the network (output of sigmoid)
+        AL -- activation from the last layer of the network
             size: (1, number of examples)
         Y -- vector containing true labels
             size: (1, number of examples)
@@ -146,8 +151,14 @@ def compute_cost(AL, Y):
         cost -- cross entropy cost
     '''
 
-    m = Y.shape[1]
-    cost = (-1/m) * np.sum(Y*np.log(AL) + (1-Y) * np.log(1-AL))
+    m = Y.shape[0]
+    
+    # sigmoid
+    #cost = (-1/m) * np.sum(Y*np.log(AL) + (1-Y) * np.log(1-AL))
+
+    # softmax
+    cost = (-1/m) * np.sum(np.multiply(Y, np.log(AL)))
+    
     cost = np.squeeze(cost)
 
     return cost
@@ -208,6 +219,10 @@ def backward_activation(dA, cache, activation):
         dZ = relu_derivative(dA, activation_cache)
         dA_prev, dW, db = backward_linear(dZ, linear_cache)
 
+    elif activation == "softmax":
+        dZ = dA
+        dA_prev, dW, db = backward_linear(dZ, linear_cache)
+
     return dA_prev, dW, db
 
 
@@ -232,15 +247,16 @@ def backward_prop(AL, Y, caches):
     '''
     grads = {}
     L = len(caches)  # number of layers
-    m = AL.shape[1]
+    m = Y.shape[0]
     Y = Y.reshape(AL.shape)  # make the AL and Y the same shape
 
     # backprop initialization, derivative of cost w/ respect to AL
-    dAL = - (np.divide(Y, AL) - np.divide(1-Y, 1-AL))
+    # dAL = - (np.divide(Y, AL) - np.divide(1-Y, 1-AL))
+    dAL = AL - Y
 
-    current_cache = caches[L-1]  # cache for the sigmoid, last layer
+    current_cache = caches[L-1]  # cache for the last layer
     dA_prev_temp, dW_temp, db_temp = backward_activation(dAL, current_cache,
-                                                         "sigmoid")
+                                                         "softmax")
     grads["dA" + str(L-1)] = dA_prev_temp
     grads["dW" + str(L)] = dW_temp
     grads["db" + str(L)] = db_temp
@@ -290,7 +306,7 @@ def update_params(params, grads, learning_rate):
 # Model #
 #########
 
-def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, print_cost):
+def model(X, Y, layers_dims, learning_rate, num_iterations, print_cost):
     '''
     Implements a deep neural network model of size L-layers
 
