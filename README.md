@@ -1,4 +1,6 @@
-# NumpyNet: Neural Network from Scratch
+# [NumpyNet: Neural Network from Scratch](https://nbviewer.org/github/mcqueg/numpy_net/blob/main/numpynet.ipynb)
+
+[view notebook here](https://nbviewer.org/github/mcqueg/numpy_net/blob/main/numpynet.ipynb) 
 
 The motivation behind building numpynet is to obtain a deeper understanding of neural network intuition and the math behind forward and backward propagation.
 
