@@ -10,3 +10,8 @@ The motivation behind building numpynet is to obtain a deeper understanding of n
 ![training](figures/train.png)
 
 ## Model Accuracy on Test Set: 92.18%
+
+
+## CNN accuracy
+- training: 99.52%
+- testing: 98.55%
